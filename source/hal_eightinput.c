@@ -69,6 +69,7 @@ void halInitKeys(BUTTON_INFO* btn, unsigned int x0, unsigned int x1, unsigned in
  * x0, x1, y0, ... には、src の 何番目ビット を 目的のボタンに当てるか指定されている。
  */
 void halSetKeys(BUTTON_INFO* btn, int src){
+	// GBAから入力を読みこみ
 	btn->b_old = btn->b0;
 	btn->b0 = (   ((src >> btn->x0 ) & 1) 
 	            | ((src >> btn->x1 ) & 1) << 1
@@ -82,7 +83,7 @@ void halSetKeys(BUTTON_INFO* btn, int src){
 	btn->b1 = (btn->b0 ^ btn->b_old) & btn->b0;
 	btn->b2 = (btn->b0 ^ btn->b_old) & btn->b_old;
 	// ABの情報 (良く使うので)
-	btn->ab = btn->b0 & BTN_AB;
+	btn->ab0 = btn->b0 & BTN_AB;
 
 	// 方向キー単体の情報取得
 	btn->k0 = btn->b0 & KEY_XY;
@@ -147,7 +148,7 @@ int halKeyToNum(BUTTON_INFO* btn){
 }
 
 int halKeyAB(BUTTON_INFO* btn){
-	return btn->ab & BTN_AB;
+	return btn->ab0 & BTN_AB;
 }
 
 // Ctrホールド + 十字キー [押したとき]
@@ -209,6 +210,8 @@ int halKeyCtr12(BUTTON_INFO* btn){
 // 十字キー
 int halKey20(BUTTON_INFO* btn){
 	int ret;
+	if (btn->f_key_move < 0)
+		return -1;
 
 	// 0 1 2 3 4 に 正規化
 	int num_5;
@@ -229,6 +232,7 @@ int halKey20(BUTTON_INFO* btn){
 int halKey8(BUTTON_INFO* btn){
 	return btn->key_8; 
 }
+
 
 int halIsKey(BUTTON_INFO* btn){
 	return (btn->k1 | btn->k2) && btn->k0;
@@ -268,7 +272,7 @@ int halIsAB_diff(BUTTON_INFO* btn){
 
 int halIsAxB(BUTTON_INFO* btn){
 	int ab_push = btn->b1 & BTN_AB;
-	int ab_hold = btn->ab ^ ab_push;
+	int ab_hold = btn->ab0 ^ ab_push;
 	int a_p = ((ab_push & BTN_A) > 0) << 0;
 	int b_p = ((ab_push & BTN_B) > 0) << 1;
 	int a_h = ((ab_hold & BTN_A) > 0) << 2;
